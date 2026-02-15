@@ -325,6 +325,39 @@ function ensureAudio() {
   musicGain.connect(master);
   musicOsc.start();
 
+  const padOsc = ctxAudio.createOscillator();
+  padOsc.type = "sawtooth";
+  const padGain = ctxAudio.createGain();
+  padGain.gain.value = 0.02;
+  padOsc.connect(padGain);
+  padGain.connect(master);
+  padOsc.start();
+
+  const bassOsc = ctxAudio.createOscillator();
+  bassOsc.type = "square";
+  const bassGain = ctxAudio.createGain();
+  bassGain.gain.value = 0.02;
+  bassOsc.connect(bassGain);
+  bassGain.connect(master);
+  bassOsc.start();
+
+  const arpOsc = ctxAudio.createOscillator();
+  arpOsc.type = "triangle";
+  const arpGain = ctxAudio.createGain();
+  arpGain.gain.value = 0.015;
+  arpOsc.connect(arpGain);
+  arpGain.connect(master);
+  arpOsc.start();
+
+  const lfo = ctxAudio.createOscillator();
+  lfo.type = "sine";
+  lfo.frequency.value = 0.25;
+  const lfoGain = ctxAudio.createGain();
+  lfoGain.gain.value = 8;
+  lfo.connect(lfoGain);
+  lfoGain.connect(padOsc.frequency);
+  lfo.start();
+
   state.audio = {
     ctx: ctxAudio,
     master,
@@ -332,6 +365,15 @@ function ensureAudio() {
     engineGain,
     musicOsc,
     musicGain,
+    padOsc,
+    padGain,
+    bassOsc,
+    bassGain,
+    arpOsc,
+    arpGain,
+    lfo,
+    seqTimer: null,
+    seqStep: 0,
   };
 
   playMusic();
@@ -348,9 +390,40 @@ function updateAudio(ratio, running) {
 
 function playMusic() {
   if (!state.audio) return;
-  const { ctx, musicOsc } = state.audio;
+  const { ctx, musicOsc, padOsc, bassOsc, arpOsc } = state.audio;
   if (ctx.state === "suspended") ctx.resume();
   musicOsc.frequency.value = 220;
+  padOsc.frequency.value = 110;
+  bassOsc.frequency.value = 55;
+  arpOsc.frequency.value = 220;
+  startSequencer();
+}
+
+function startSequencer() {
+  const audio = state.audio;
+  if (!audio || audio.seqTimer) return;
+
+  const scale = [0, 3, 5, 7, 10];
+  const chordRoots = [48, 43, 50, 45];
+  const arpPattern = [0, 2, 4, 2, 0, 3, 4, 3];
+  const bpm = 80;
+  const stepTime = 60 / bpm / 2;
+
+  audio.seqTimer = setInterval(() => {
+    const step = audio.seqStep % arpPattern.length;
+    const chord = chordRoots[Math.floor(audio.seqStep / arpPattern.length) % chordRoots.length];
+    const arpNote = chord + scale[arpPattern[step]];
+
+    audio.arpOsc.frequency.setValueAtTime(midiToFreq(arpNote), audio.ctx.currentTime);
+    audio.bassOsc.frequency.setValueAtTime(midiToFreq(chord - 12), audio.ctx.currentTime);
+    audio.padOsc.frequency.setValueAtTime(midiToFreq(chord), audio.ctx.currentTime);
+
+    audio.seqStep += 1;
+  }, stepTime * 1000);
+}
+
+function midiToFreq(note) {
+  return 440 * Math.pow(2, (note - 69) / 12);
 }
 
 function playCrash() {
