@@ -18,13 +18,18 @@ const road = {
 
 const car = {
   width: 40,
-  height: 70,
-  x: canvas.width * 0.5 - 20,
   y: canvas.height - 120,
   speedX: 0,
   maxX: 0,
 };
 
+    const accelerate = keys.has("ArrowUp") || keys.has("w");
+    const baseSpeed = 240 + state.time * 6;
+    let targetSpeed = baseSpeed;
+    if (accelerate) targetSpeed += 120;
+    if (brake) targetSpeed -= 120;
+    targetSpeed = clamp(targetSpeed, 120, 520);
+    state.speed += (targetSpeed - state.speed) * Math.min(1, delta * 3);
 const state = {
   running: false,
   time: 0,
@@ -35,7 +40,7 @@ const state = {
   traffic: [],
   spawnTimer: 0,
   spawnInterval: 1.4,
-  audio: null,
+    const scrollSpeed = state.speed * delta;
 };
 
 const keys = new Set();
@@ -104,22 +109,28 @@ function update(delta) {
   speedEl.textContent = Math.round(state.speed);
 
   state.difficulty = 1 + state.time / 20;
-  state.speed = 240 + state.time * 6;
 
   const moveLeft = keys.has("ArrowLeft") || keys.has("a");
   const moveRight = keys.has("ArrowRight") || keys.has("d");
+  const accelerate = keys.has("ArrowUp") || keys.has("w");
   const brake = keys.has("ArrowDown") || keys.has("s");
 
-  const targetSpeed = brake ? 140 : 260;
-  const accel = brake ? 240 : 340;
+  const baseSpeed = 240 + state.time * 6;
+  let targetSpeed = baseSpeed;
+  if (accelerate) targetSpeed += 120;
+  if (brake) targetSpeed -= 120;
+  targetSpeed = clamp(targetSpeed, 120, 520);
+  state.speed += (targetSpeed - state.speed) * Math.min(1, delta * 3);
+
+  const accel = 520;
   car.speedX += (moveRight - moveLeft) * accel * delta;
-  car.speedX *= 0.92;
+  car.speedX *= 0.88;
 
   car.x += car.speedX * delta;
   car.maxX = road.x + road.width - car.width;
   car.x = clamp(car.x, road.x, car.maxX);
 
-  const scrollSpeed = state.speed * delta * (brake ? 0.7 : 1);
+  const scrollSpeed = state.speed * delta;
 
   state.spawnTimer += delta;
   state.spawnInterval = Math.max(0.55, 1.4 - state.time / 50);
@@ -167,7 +178,7 @@ function update(delta) {
     triggerGameOver();
   }
 
-  updateAudio(state.speed / targetSpeed, state.running);
+  updateAudio(state.speed / Math.max(160, targetSpeed), state.running);
 }
 
 function collide(a, b) {
