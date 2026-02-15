@@ -40,7 +40,6 @@ const state = {
   traffic: [],
   spawnTimer: 0,
   spawnInterval: 1.4,
-    const scrollSpeed = state.speed * delta;
 };
 
 const keys = new Set();
