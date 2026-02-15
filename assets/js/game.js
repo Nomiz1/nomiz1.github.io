@@ -310,10 +310,15 @@ function ensureAudio() {
   master.connect(ctxAudio.destination);
 
   const engineOsc = ctxAudio.createOscillator();
-  engineOsc.type = "sawtooth";
+  engineOsc.type = "triangle";
+  const engineFilter = ctxAudio.createBiquadFilter();
+  engineFilter.type = "lowpass";
+  engineFilter.frequency.value = 420;
+  engineFilter.Q.value = 0.7;
   const engineGain = ctxAudio.createGain();
-  engineGain.gain.value = 0.04;
-  engineOsc.connect(engineGain);
+  engineGain.gain.value = 0.03;
+  engineOsc.connect(engineFilter);
+  engineFilter.connect(engineGain);
   engineGain.connect(master);
   engineOsc.start();
 
@@ -362,6 +367,7 @@ function ensureAudio() {
     ctx: ctxAudio,
     master,
     engineOsc,
+    engineFilter,
     engineGain,
     musicOsc,
     musicGain,
@@ -381,10 +387,13 @@ function ensureAudio() {
 
 function updateAudio(ratio, running) {
   if (!state.audio) return;
-  const { engineOsc, engineGain, musicOsc } = state.audio;
-  const base = 110;
-  engineOsc.frequency.value = base + ratio * 220;
-  engineGain.gain.value = running ? 0.05 + ratio * 0.02 : 0.01;
+  const { engineOsc, engineGain, engineFilter, musicOsc, ctx } = state.audio;
+  const base = 70;
+  const targetFreq = base + ratio * 140;
+  const now = ctx.currentTime;
+  engineOsc.frequency.setTargetAtTime(targetFreq, now, 0.08);
+  engineFilter.frequency.setTargetAtTime(280 + ratio * 260, now, 0.08);
+  engineGain.gain.setTargetAtTime(running ? 0.035 + ratio * 0.015 : 0.008, now, 0.08);
   musicOsc.frequency.value = 220 + Math.sin(state.time * 0.5) * 30;
 }
 
