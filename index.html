@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neon Alley Rush</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="hud">
+        <div class="title">Neon Alley Rush</div>
+        <div class="stats">
+          <div class="stat">Tid: <span id="time">0.0</span>s</div>
+          <div class="stat">Hastighet: <span id="speed">0</span></div>
+        </div>
+      </header>
+
+      <div class="game-wrap">
+        <canvas id="game" width="900" height="600" aria-label="Bilspel"></canvas>
+        <div id="menu" class="overlay">
+          <div class="panel">
+            <h1>Neon Alley Rush</h1>
+            <p>Kör så länge du kan. Undvik hinder, gående och mötande bilar.</p>
+            <button id="playBtn">Spela</button>
+            <p class="hint">Styr med A/D eller piltangenter. Bromsa med S eller bakpil.</p>
+          </div>
+        </div>
+        <div id="gameover" class="overlay hidden">
+          <div class="panel">
+            <h2>Game Over</h2>
+            <p>Du klarade <span id="finalTime">0.0</span>s</p>
+            <button id="restartBtn">Spela igen</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="controls">
+        <span>Kontroller: A/D eller ←/→ för sidled, S eller ↓ för broms</span>
+      </footer>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
